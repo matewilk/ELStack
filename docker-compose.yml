@@ -1,0 +1,48 @@
+version: '2'
+
+services:
+  node:
+    container_name: node
+    build: .
+    ports:
+      - "8080:8080"
+      - "5858:5858"
+      - "3000:3000"
+    volumes:
+      - ".:/usr/src/app"
+      - "/usr/src/app/node_modules"
+    networks:
+      - esnet
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.2.2
+    container_name: elasticsearch
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./data:/usr/src/app/data
+    ports:
+      - 9200:9200
+    networks:
+      - esnet
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.2.2
+    container_name: kibana
+    ports:
+      - 5601:5601
+    networks:
+      - esnet
+    depends_on:
+      - elasticsearch
+
+
+networks:
+  esnet:
+    driver: bridge
